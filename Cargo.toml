@@ -1,0 +1,20 @@
+[package]
+name = "numbagoup"
+version = "0.1.0"
+authors = ["Christoph Burgdorf <christoph.burgdorf@gmail.com>"]
+edition = "2018"
+description = "A tool to track the earnings of your yearn vaults (limited to crvCOMP vault for now)"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+anyhow = "1.0.38"
+rand = "0.7"
+serde = { version = "1.0.124", features = ["derive"] }
+serde_json = "1.0.64"
+tokio = { version = "1.2", features = ["macros", "rt-multi-thread"] }
+bigdecimal = "0.2.0"
+clap = "2.33.3"
+ethers = "0.2.2"
