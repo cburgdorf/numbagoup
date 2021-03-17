@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
         "https://mainnet.infura.io/v3/c60b0bb42f8a4c6481ecd229eddaca27",
     )?;
 
-    let me = Address::from_str(holder_address).unwrap();
+    let me = Address::from_str(holder_address).expect("Holder address is invalid");
 
     let yearn_cmp_vault =
         YearnVaultV1::new(&provider, YEARN_VAULT_V1_ABI, YEARN_CRV_COMP_VAULT_ADDRESS);
