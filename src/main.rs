@@ -6,10 +6,14 @@ use std::str::FromStr;
 
 mod constants;
 mod contracts;
+mod store;
+mod types;
 mod utils;
 
 use crate::constants::*;
 use crate::contracts::{CurveCompLPToken, CurveRegistry, YearnVaultV1};
+use crate::store::{init_default_db, read_entries, save_entry};
+use crate::types::UserVaultHoldings;
 use crate::utils::{scale_to_share, Scale, ToBigDecimal};
 
 #[tokio::main]
@@ -30,6 +34,33 @@ async fn main() -> Result<()> {
         "https://mainnet.infura.io/v3/c60b0bb42f8a4c6481ecd229eddaca27",
     )?;
 
+    let holdings = get_holdings(provider, holder_address).await?;
+
+    let db = init_default_db().map_err(|err| anyhow::anyhow!(err))?;
+
+    println!("==CRV COMP VAULT PARAMS==");
+    println!("Price Per Share {:.4}", holdings.price_per_share);
+    println!("==MY CRV COMP VAULT Holdings==");
+    println!("CDAI {:.4}", holdings.cdai);
+    println!("CUSDC {:.4}", holdings.cusdc);
+    println!("CUSDC+CDAI {:.4}", holdings.cboth);
+    println!("DAI {:.4}", holdings.dai);
+    println!("USDC {:.4}", holdings.usdc);
+    println!("USDC+DAI {:.4}", holdings.both);
+
+    let previous_entries = read_entries(&db);
+
+    if let Some(previous) = previous_entries.last() {
+        let gain = &holdings.both - &previous.both;
+        println!("USDC+DAI Gain since last check 🚜 {:.4}", gain);
+    }
+
+    save_entry(&db, &holdings)?;
+
+    Ok(())
+}
+
+async fn get_holdings(provider: Provider<Http>, holder_address: &str) -> Result<UserVaultHoldings> {
     let me = Address::from_str(holder_address).expect("Holder address is invalid");
 
     let yearn_cmp_vault =
@@ -75,14 +106,13 @@ async fn main() -> Result<()> {
     let both = &my_usdc + &my_dai;
     let cboth = &my_cusdc + &my_cdai;
 
-    println!("==CRV COMP VAULT PARAMS==");
-    println!("Price Per Share {:.4}", price_per_share);
-    println!("==MY CRV COMP VAULT Holdings==");
-    println!("CDAI {:.4}", &my_cdai.scale_1e8());
-    println!("CUSDC {:.4}", &my_cusdc.scale_1e8());
-    println!("CUSDC+CDAI {:.4}", &cboth.scale_1e8());
-    println!("DAI {:.4}", &my_dai.scale_1e18());
-    println!("USDC {:.4}", &my_usdc.scale_1e18());
-    println!("USDC+DAI {:.4}", &both.scale_1e18());
-    Ok(())
+    Ok(UserVaultHoldings {
+        price_per_share: price_per_share.clone(),
+        cdai: my_cdai.scale_1e8(),
+        cusdc: my_cusdc.scale_1e8(),
+        cboth: cboth.scale_1e8(),
+        dai: my_dai.scale_1e18(),
+        usdc: my_usdc.scale_1e18(),
+        both: both.scale_1e18(),
+    })
 }

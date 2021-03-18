@@ -18,3 +18,9 @@ tokio = { version = "1.2", features = ["macros", "rt-multi-thread"] }
 bigdecimal = "0.2.0"
 clap = "2.33.3"
 ethers = "0.2.2"
+dirs = "3.0.1"
+tempfile = "3.2.0"
+
+[dependencies.rustbreak]
+version = "2"
+features = ["ron_enc"]
