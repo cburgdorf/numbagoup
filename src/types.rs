@@ -25,7 +25,6 @@ pub struct DbUserVaultHoldings {
 }
 
 impl UserVaultHoldings {
-
     #[allow(dead_code)]
     pub fn zero() -> UserVaultHoldings {
         UserVaultHoldings {

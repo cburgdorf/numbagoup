@@ -1,4 +1,5 @@
 use anyhow::Result;
+use bigdecimal::BigDecimal;
 use clap::{App, Arg};
 use ethers::prelude::*;
 use std::convert::TryFrom;
@@ -38,26 +39,51 @@ async fn main() -> Result<()> {
 
     let db = init_default_db().map_err(|err| anyhow::anyhow!(err))?;
 
-    println!("==CRV COMP VAULT PARAMS==");
-    println!("Price Per Share {:.4}", holdings.price_per_share);
-    println!("==MY CRV COMP VAULT Holdings==");
-    println!("CDAI {:.4}", holdings.cdai);
-    println!("CUSDC {:.4}", holdings.cusdc);
-    println!("CUSDC+CDAI {:.4}", holdings.cboth);
-    println!("DAI {:.4}", holdings.dai);
-    println!("USDC {:.4}", holdings.usdc);
-    println!("USDC+DAI {:.4}", holdings.both);
-
     let previous_entries = read_entries(&db);
 
-    if let Some(previous) = previous_entries.last() {
-        let gain = &holdings.both - &previous.both;
-        println!("USDC+DAI Gain since last check 🚜 {:.4}", gain);
-    }
+    let gain = previous_entries
+        .last()
+        .map(|previous| &holdings.both - &previous.both)
+        .unwrap_or(BigDecimal::from(0));
 
+    print_result(&holdings, gain);
     save_entry(&db, &holdings)?;
 
     Ok(())
+}
+
+fn print_result(current_holdings: &UserVaultHoldings, gain: BigDecimal) {
+
+    print!(
+        "
+VAULT               |      crvCOMP   |
+********************|****************|
+Price per share     |{:14.4}  |
+--------------------|----------------|
+CDAI                |{:14.4}  |
+--------------------|----------------|
+CUSDC               |{:14.4}  |
+--------------------|-----------------
+CUSDC+CDAI          |{:14.4}  |
+--------------------|----------------|
+DAI                 |{:14.4}  |
+--------------------|----------------|
+USDC                |{:14.4}  |
+=====================================|
+USDC + DAI 💰       |{:14.4}  |
+--------------------|----------------|
+Gains 🚜 last check |{:14.4}  |
+--------------------|----------------|
+    ",
+        current_holdings.price_per_share,
+        current_holdings.cdai,
+        current_holdings.cusdc,
+        current_holdings.cboth,
+        current_holdings.dai,
+        current_holdings.usdc,
+        current_holdings.both,
+        gain
+    );
 }
 
 async fn get_holdings(provider: Provider<Http>, holder_address: &str) -> Result<UserVaultHoldings> {

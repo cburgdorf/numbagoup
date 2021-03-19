@@ -72,12 +72,7 @@ pub fn read_entries(db: &DB) -> Vec<UserVaultHoldings> {
 #[cfg(test)]
 mod tests {
     use crate::store::{
-        get_app_dir,
-        init_db,
-        read_entries,
-        save_entry,
-        DbUserVaultHoldings,
-        UserVaultHoldings,
+        get_app_dir, init_db, read_entries, save_entry, DbUserVaultHoldings, UserVaultHoldings,
     };
     use std::path::PathBuf;
     use tempfile::tempdir;
