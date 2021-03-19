@@ -50,9 +50,12 @@ pub fn init_db(path: PathBuf) -> Result<DB, &'static str> {
 }
 
 pub fn save_entry(db: &DB, entry: &UserVaultHoldings) -> Result<(), rustbreak::RustbreakError> {
-    // TODO: We should check if the previous entry is identical and skip if that's the case
     db.write(|db| {
-        db.entries.push(entry.into());
+        let db_entry: DbUserVaultHoldings = entry.into();
+        let last_entry = db.entries.last();
+        if matches!(last_entry, Some(previous) if previous != &db_entry) || last_entry.is_none() {
+            db.entries.push(db_entry);
+        }
     })?;
     db.save()?;
     Ok(())
@@ -68,11 +71,15 @@ pub fn read_entries(db: &DB) -> Vec<UserVaultHoldings> {
 
 #[cfg(test)]
 mod tests {
-    use crate::store::{get_app_dir, init_db, init_default_db, DbUserVaultHoldings};
-    use bigdecimal::BigDecimal;
-    use std::fs;
+    use crate::store::{
+        get_app_dir,
+        init_db,
+        read_entries,
+        save_entry,
+        DbUserVaultHoldings,
+        UserVaultHoldings,
+    };
     use std::path::PathBuf;
-    use std::{env, ops::RangeBounds};
     use tempfile::tempdir;
     #[test]
     fn test_get_app_dir() {
@@ -112,5 +119,21 @@ mod tests {
         let entries = db.read(|db| db.entries.clone()).unwrap();
         assert_eq!(foo, Some("bar".to_string()));
         assert_eq!(entries.len(), 2);
+    }
+
+    #[test]
+    fn test_write_skips_duplicate_subsequent_entry() {
+        let db_path = tempdir().unwrap();
+        let db_path = db_path.path().join("test2.ron");
+        let db = init_db(db_path).unwrap();
+
+        let entry_1 = UserVaultHoldings::zero();
+        let entry_2 = UserVaultHoldings::zero();
+
+        save_entry(&db, &entry_1).unwrap();
+        save_entry(&db, &entry_2).unwrap();
+
+        let entries = read_entries(&db);
+        assert_eq!(entries.len(), 1);
     }
 }
