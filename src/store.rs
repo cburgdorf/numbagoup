@@ -74,8 +74,10 @@ mod tests {
     use crate::store::{
         get_app_dir, init_db, read_entries, save_entry, DbUserVaultHoldings, UserVaultHoldings,
     };
+    use crate::utils::unix_time;
     use std::path::PathBuf;
     use tempfile::tempdir;
+
     #[test]
     fn test_get_app_dir() {
         assert_eq!(
@@ -92,6 +94,7 @@ mod tests {
         let _ = db.write(|db| {
             db.any.insert("foo".to_string(), "bar".to_string());
             db.entries.push(DbUserVaultHoldings {
+                timestamp: unix_time(),
                 price_per_share: "0".to_string(),
                 dai: "0".to_string(),
                 usdc: "0".to_string(),
@@ -101,6 +104,7 @@ mod tests {
                 cboth: "0".to_string(),
             });
             db.entries.push(DbUserVaultHoldings {
+                timestamp: unix_time(),
                 price_per_share: "1".to_string(),
                 dai: "1".to_string(),
                 usdc: "1".to_string(),
@@ -123,7 +127,9 @@ mod tests {
         let db = init_db(db_path).unwrap();
 
         let entry_1 = UserVaultHoldings::zero();
-        let entry_2 = UserVaultHoldings::zero();
+        let mut entry_2 = UserVaultHoldings::zero();
+        // Different timestamps should be ignored
+        entry_2.timestamp = entry_2.timestamp + 1;
 
         save_entry(&db, &entry_1).unwrap();
         save_entry(&db, &entry_2).unwrap();

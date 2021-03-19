@@ -1,10 +1,21 @@
 use std::str::FromStr;
 
+use crate::utils::unix_time;
 use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
+pub struct VaultPerformance {
+    pub gain_last_check: BigDecimal,
+    pub gain_past_hour: BigDecimal,
+    pub gain_past_day: BigDecimal,
+    pub gain_past_week: BigDecimal,
+    pub gain_past_month: BigDecimal,
+}
+
+#[derive(Debug, Clone)]
 pub struct UserVaultHoldings {
+    pub timestamp: u64,
     pub price_per_share: BigDecimal,
     pub cdai: BigDecimal,
     pub cusdc: BigDecimal,
@@ -13,8 +24,12 @@ pub struct UserVaultHoldings {
     pub usdc: BigDecimal,
     pub both: BigDecimal,
 }
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+
+#[derive(Debug, Derivative, Serialize, Deserialize, Clone)]
+#[derivative(PartialEq, Hash)]
 pub struct DbUserVaultHoldings {
+    #[derivative(PartialEq = "ignore")]
+    pub timestamp: u64,
     pub price_per_share: String,
     pub cdai: String,
     pub cusdc: String,
@@ -28,6 +43,7 @@ impl UserVaultHoldings {
     #[allow(dead_code)]
     pub fn zero() -> UserVaultHoldings {
         UserVaultHoldings {
+            timestamp: unix_time(),
             price_per_share: BigDecimal::from(0),
             cdai: BigDecimal::from(0),
             cusdc: BigDecimal::from(0),
@@ -42,6 +58,7 @@ impl UserVaultHoldings {
 impl From<&UserVaultHoldings> for DbUserVaultHoldings {
     fn from(val: &UserVaultHoldings) -> Self {
         DbUserVaultHoldings {
+            timestamp: val.timestamp,
             price_per_share: val.price_per_share.to_string(),
             cdai: val.cdai.to_string(),
             cusdc: val.cusdc.to_string(),
@@ -56,6 +73,7 @@ impl From<&UserVaultHoldings> for DbUserVaultHoldings {
 impl From<&DbUserVaultHoldings> for UserVaultHoldings {
     fn from(val: &DbUserVaultHoldings) -> Self {
         UserVaultHoldings {
+            timestamp: val.timestamp,
             price_per_share: BigDecimal::from_str(&val.price_per_share).unwrap(),
             cdai: BigDecimal::from_str(&val.cdai).unwrap(),
             cusdc: BigDecimal::from_str(&val.cusdc).unwrap(),

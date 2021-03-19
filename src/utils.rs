@@ -1,6 +1,7 @@
 use bigdecimal::{BigDecimal, FromPrimitive};
 use ethers::types::U256;
 use std::str::FromStr;
+use std::time::SystemTime;
 
 pub trait ToBigDecimal {
     fn to_big_dec(&self) -> BigDecimal;
@@ -37,4 +38,12 @@ pub fn scale_to_share(
     my_shares: &BigDecimal,
 ) -> BigDecimal {
     assets / total_shares * my_shares
+}
+
+/// Return seconds since UNIX epoch
+pub fn unix_time() -> u64 {
+    match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+        Ok(n) => n.as_secs(),
+        Err(_) => panic!("SystemTime before UNIX EPOCH!"),
+    }
 }

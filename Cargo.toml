@@ -24,3 +24,7 @@ tempfile = "3.2.0"
 [dependencies.rustbreak]
 version = "2"
 features = ["ron_enc"]
+
+[dependencies.derivative]
+version = "2.2.0"
+features = ["use_core"]
