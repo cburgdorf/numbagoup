@@ -14,3 +14,4 @@ pub const HOUR_IN_SEC: u64 = 60 * 60;
 pub const DAY_IN_SEC: u64 = HOUR_IN_SEC * 24;
 pub const WEEK_IN_SEC: u64 = DAY_IN_SEC * 7;
 pub const MONTH_IN_SEC: u64 = DAY_IN_SEC * 30;
+pub const YEAR_IN_SEC: u64 = DAY_IN_SEC * 365;

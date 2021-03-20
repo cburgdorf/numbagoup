@@ -28,42 +28,78 @@ pub fn find_closest_to(entries: &[UserVaultHoldings], timestamp: u64) -> Option<
     previous_entry
 }
 
+pub struct GainInfo {
+    gain: BigDecimal,
+    apy: BigDecimal,
+}
+
+impl GainInfo {
+    pub fn zero() -> GainInfo {
+        GainInfo {
+            gain: BigDecimal::from(0),
+            apy: BigDecimal::from(0),
+        }
+    }
+}
+
 /// Calculate the gains in the given past duration
 pub fn get_gain_in_past_duration(
     entries: &[UserVaultHoldings],
     now: u64,
     duration_sec: u64,
-) -> BigDecimal {
+) -> GainInfo {
     let start_time = now - duration_sec;
     let start_point = find_closest_to(entries, start_time);
     if let (Some(start_holdings), Some(now_holdings)) = (start_point, entries.last()) {
         let gain = &now_holdings.both - &start_holdings.both;
         let actual_duration = now_holdings.timestamp - start_holdings.timestamp;
         if actual_duration == 0 {
-            return BigDecimal::from(0);
+            return GainInfo::zero();
         }
         let scaled_gain = gain / BigDecimal::from(actual_duration) * BigDecimal::from(duration_sec);
-        return scaled_gain;
+
+        let gain_in_percent = ((&start_holdings.both + &scaled_gain) / &start_holdings.both
+            - BigDecimal::from(1))
+            * BigDecimal::from(100);
+        let apy = &gain_in_percent / BigDecimal::from(duration_sec)
+            * BigDecimal::from(constants::YEAR_IN_SEC);
+
+        return GainInfo {
+            gain: scaled_gain,
+            apy,
+        };
     }
-    BigDecimal::from(0)
+    GainInfo::zero()
 }
 
 pub fn get_performance(
     since_last_check: BigDecimal,
     entries: &[UserVaultHoldings],
 ) -> VaultPerformance {
+    let gain_info_past_hour =
+        get_gain_in_past_duration(entries, unix_time(), constants::HOUR_IN_SEC);
+    let gain_info_past_day = get_gain_in_past_duration(entries, unix_time(), constants::DAY_IN_SEC);
+    let gain_info_past_week =
+        get_gain_in_past_duration(entries, unix_time(), constants::WEEK_IN_SEC);
+    let gain_info_past_month =
+        get_gain_in_past_duration(entries, unix_time(), constants::MONTH_IN_SEC);
+
     VaultPerformance {
         gain_last_check: since_last_check,
-        gain_past_hour: get_gain_in_past_duration(entries, unix_time(), constants::HOUR_IN_SEC),
-        gain_past_day: get_gain_in_past_duration(entries, unix_time(), constants::DAY_IN_SEC),
-        gain_past_week: get_gain_in_past_duration(entries, unix_time(), constants::WEEK_IN_SEC),
-        gain_past_month: get_gain_in_past_duration(entries, unix_time(), constants::MONTH_IN_SEC),
+        gain_past_hour: gain_info_past_hour.gain,
+        apy_past_hour: gain_info_past_hour.apy,
+        gain_past_day: gain_info_past_day.gain,
+        apy_past_day: gain_info_past_day.apy,
+        gain_past_week: gain_info_past_week.gain,
+        apy_past_week: gain_info_past_week.apy,
+        gain_past_month: gain_info_past_month.gain,
+        apy_past_month: gain_info_past_month.apy,
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::calculations::{find_closest_to, get_gain_in_past_duration};
+    use crate::calculations::{find_closest_to, get_gain_in_past_duration, GainInfo};
     use crate::types::UserVaultHoldings;
     use bigdecimal::BigDecimal;
 
@@ -143,13 +179,10 @@ mod tests {
 
         let now = 40;
 
-        assert_eq!(
-            get_gain_in_past_duration(&entries, now, 20),
-            BigDecimal::from(80)
-        );
-        assert_eq!(
-            get_gain_in_past_duration(&entries, now, 15),
-            BigDecimal::from(60)
-        );
+        let first = get_gain_in_past_duration(&entries, now, 20);
+        assert_eq!(first.gain, BigDecimal::from(80));
+
+        let second = get_gain_in_past_duration(&entries, now, 15);
+        assert_eq!(second.gain, BigDecimal::from(60));
     }
 }

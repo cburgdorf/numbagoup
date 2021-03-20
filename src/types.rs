@@ -8,9 +8,13 @@ use serde::{Deserialize, Serialize};
 pub struct VaultPerformance {
     pub gain_last_check: BigDecimal,
     pub gain_past_hour: BigDecimal,
+    pub apy_past_hour: BigDecimal,
     pub gain_past_day: BigDecimal,
+    pub apy_past_day: BigDecimal,
     pub gain_past_week: BigDecimal,
+    pub apy_past_week: BigDecimal,
     pub gain_past_month: BigDecimal,
+    pub apy_past_month: BigDecimal,
 }
 
 #[derive(Debug, Clone)]
