@@ -10,15 +10,15 @@ use std::convert::TryFrom;
 mod calculations;
 mod constants;
 mod contracts;
+mod format;
 mod store;
 mod types;
 mod utils;
 mod vaults;
 
 use crate::calculations::get_performance;
-
+use crate::format::{print_header, print_result};
 use crate::store::{init_default_db, read_entries, save_entry};
-use crate::types::{UserVaultHoldings, VaultPerformance};
 use crate::vaults::get_holdings;
 
 #[tokio::main]
@@ -56,56 +56,8 @@ async fn main() -> Result<()> {
 
     let performance = get_performance(gain, &latest_entries);
 
-    print_result(&holdings, performance);
+    print_header();
+    print_result(&holdings, &performance);
 
     Ok(())
-}
-
-fn print_result(current_holdings: &UserVaultHoldings, performance: VaultPerformance) {
-    print!(
-        "
-VAULT               |            crvCOMP        |
-********************|***************************|
-Price per share     |{:14.4}  |          |
---------------------|----------------|          |
-CDAI                |{:14.4}  |          |
---------------------|----------------|          |
-CUSDC               |{:14.4}  |          |
---------------------|----------------|          |
-CUSDC+CDAI          |{:14.4}  |          |
---------------------|----------------|          |
-DAI                 |{:14.4}  |          |
---------------------|----------------|          |
-USDC                |{:14.4}  |          |
-=====================================|          |
-USDC + DAI 💰       |{:14.4}  |          |
---------------------|----------------|          |
-Gains 🚜 last check |{:14.4}  |   APY    |
---------------------|----------------|==========|
-Gains 🚜 past hour  |{:14.4}  | ({:4.1} %) |
---------------------|----------------|----------|
-Gains 🚜 past day   |{:14.4}  | ({:4.1} %) |
---------------------|----------------|----------|
-Gains 🚜 past week  |{:14.4}  | ({:4.1} %) |
---------------------|----------------|----------|
-Gains 🚜 past month |{:14.4}  | ({:4.1} %) |
---------------------|----------------|----------|
-    ",
-        current_holdings.price_per_share,
-        current_holdings.cdai,
-        current_holdings.cusdc,
-        current_holdings.cboth,
-        current_holdings.dai,
-        current_holdings.usdc,
-        current_holdings.both,
-        performance.gain_last_check,
-        performance.gain_past_hour,
-        performance.apy_past_hour,
-        performance.gain_past_day,
-        performance.apy_past_day,
-        performance.gain_past_week,
-        performance.apy_past_week,
-        performance.gain_past_month,
-        performance.apy_past_month,
-    );
 }
