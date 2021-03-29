@@ -20,6 +20,7 @@ clap = "2.33.3"
 ethers = "0.2.2"
 dirs = "3.0.1"
 tempfile = "3.2.0"
+chrono = "0.4.19"
 
 [dependencies.rustbreak]
 version = "2"

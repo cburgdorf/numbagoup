@@ -3,9 +3,10 @@ extern crate derivative;
 
 use anyhow::Result;
 use bigdecimal::BigDecimal;
-use clap::{App, Arg};
+use chrono::NaiveDateTime;
+use clap::{App, Arg, SubCommand};
 use ethers::prelude::*;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 mod calculations;
 mod constants;
@@ -18,23 +19,49 @@ mod vaults;
 
 use crate::calculations::get_performance;
 use crate::format::{print_header, print_result};
-use crate::store::{init_default_db, read_entries, save_entry};
+use crate::store::{db_info, init_default_db, read_entries, save_entry};
 use crate::vaults::get_holdings;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let matches = App::new("NumbaGoUp")
+    let mut app = App::new("NumbaGoUp")
         .about("Track the holdings of your yearn crvCOMP vault go up in USD")
+        .subcommand(SubCommand::with_name("db-info"))
         .arg(
             Arg::with_name("holder-address")
                 .help("The address of the crvCOMP Vault holder")
-                .index(1)
-                .required(true),
-        )
-        .get_matches();
+                .index(1),
+        );
 
-    let holder_address = matches.value_of("holder-address").unwrap();
+    let matches = app.clone().get_matches();
+    if let Some(address) = matches.value_of("holder-address") {
+        performance_report(address).await?;
+    } else if matches.subcommand_matches("db-info").is_some() {
+        show_db_info()?;
+    } else {
+        app.print_help()?;
+    }
+    Ok(())
+}
 
+fn show_db_info() -> Result<()> {
+    let db = init_default_db().map_err(|err| anyhow::anyhow!(err))?;
+    let info = db_info(&db);
+    let oldest = NaiveDateTime::from_timestamp(info.oldest_timestamp.try_into().unwrap(), 0);
+    let newest = NaiveDateTime::from_timestamp(info.newest_timestamp.try_into().unwrap(), 0);
+
+    print!(
+        "
+Total Entries: {}
+Oldest: {}
+Newest: {}
+",
+        info.entry_count, oldest, newest
+    );
+    Ok(())
+}
+
+async fn performance_report(holder_address: &str) -> Result<()> {
     let provider = Provider::<Http>::try_from(
         "https://mainnet.infura.io/v3/c60b0bb42f8a4c6481ecd229eddaca27",
     )?;

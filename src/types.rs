@@ -5,6 +5,13 @@ use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
+pub struct DbInfo {
+    pub oldest_timestamp: u64,
+    pub newest_timestamp: u64,
+    pub entry_count: usize,
+}
+
+#[derive(Debug, Clone)]
 pub struct VaultPerformance {
     pub gain_last_check: BigDecimal,
     pub gain_past_hour: BigDecimal,

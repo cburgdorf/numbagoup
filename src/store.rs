@@ -1,3 +1,4 @@
+use crate::types::DbInfo;
 use std::fs;
 use std::path::PathBuf;
 
@@ -67,6 +68,23 @@ pub fn read_entries(db: &DB) -> Vec<UserVaultHoldings> {
         .iter()
         .map(UserVaultHoldings::from)
         .collect()
+}
+
+pub fn db_info(db: &DB) -> DbInfo {
+    db.read(|db| DbInfo {
+        entry_count: db.entries.len(),
+        oldest_timestamp: db
+            .entries
+            .first()
+            .map(|val| val.timestamp)
+            .unwrap_or_default(),
+        newest_timestamp: db
+            .entries
+            .last()
+            .map(|val| val.timestamp)
+            .unwrap_or_default(),
+    })
+    .unwrap()
 }
 
 #[cfg(test)]
