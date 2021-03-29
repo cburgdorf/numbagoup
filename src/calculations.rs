@@ -99,7 +99,7 @@ pub fn get_performance(
 
 #[cfg(test)]
 mod tests {
-    use crate::calculations::{find_closest_to, get_gain_in_past_duration, GainInfo};
+    use crate::calculations::{find_closest_to, get_gain_in_past_duration };
     use crate::types::UserVaultHoldings;
     use bigdecimal::BigDecimal;
 
