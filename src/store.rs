@@ -1,6 +1,6 @@
 use crate::types::DbInfo;
-use std::fs;
 use std::path::PathBuf;
+use std::{fs, vec};
 
 use rustbreak::{deser::Ron, FileDatabase};
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,8 @@ pub type DB = FileDatabase<Data, Ron>;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Data {
-    pub entries: Vec<DbUserVaultHoldings>,
+    // "0xdeadbeef_vaultname" -> entries
+    pub group_entries: HashMap<String, Vec<DbUserVaultHoldings>>,
     pub any: HashMap<String, String>,
 }
 
@@ -43,48 +44,58 @@ pub fn init_db(path: PathBuf) -> Result<DB, &'static str> {
     FileDatabase::load_from_path_or(
         path,
         Data {
-            entries: vec![],
+            group_entries: HashMap::new(),
             any: HashMap::new(),
         },
     )
     .map_err(|_| "Could not read database")
 }
 
-pub fn save_entry(db: &DB, entry: &UserVaultHoldings) -> Result<(), rustbreak::RustbreakError> {
+pub fn save_entry(
+    db: &DB,
+    group_id: &str,
+    entry: &UserVaultHoldings,
+) -> Result<(), rustbreak::RustbreakError> {
     db.write(|db| {
         let db_entry: DbUserVaultHoldings = entry.into();
-        let last_entry = db.entries.last();
-        if matches!(last_entry, Some(previous) if previous != &db_entry) || last_entry.is_none() {
-            db.entries.push(db_entry);
+        match db.group_entries.get_mut(group_id) {
+            Some(entries) => {
+                let last_entry = entries.last();
+                if matches!(last_entry, Some(previous) if previous != &db_entry)
+                    || last_entry.is_none()
+                {
+                    entries.push(db_entry);
+                }
+            }
+            _ => {
+                db.group_entries.insert(group_id.to_owned(), vec![db_entry]);
+            }
         }
     })?;
     db.save()?;
     Ok(())
 }
 
-pub fn read_entries(db: &DB) -> Vec<UserVaultHoldings> {
-    db.read(|db| db.entries.clone())
-        .unwrap()
-        .iter()
-        .map(UserVaultHoldings::from)
-        .collect()
+pub fn read_entries(db: &DB, group_id: &str) -> Vec<UserVaultHoldings> {
+    match db.read(|db| db.group_entries.get(group_id).cloned()) {
+        Ok(Some(val)) => val.iter().map(UserVaultHoldings::from).collect(),
+        _ => vec![],
+    }
 }
 
-pub fn db_info(db: &DB) -> DbInfo {
-    db.read(|db| DbInfo {
-        entry_count: db.entries.len(),
-        oldest_timestamp: db
-            .entries
-            .first()
-            .map(|val| val.timestamp)
-            .unwrap_or_default(),
-        newest_timestamp: db
-            .entries
-            .last()
-            .map(|val| val.timestamp)
-            .unwrap_or_default(),
-    })
-    .unwrap()
+pub fn db_info(db: &DB, group_id: &str) -> DbInfo {
+    match db.read(|db| db.group_entries.get(group_id).cloned()) {
+        Ok(Some(entries)) => DbInfo {
+            entry_count: entries.len(),
+            oldest_timestamp: entries.first().map(|val| val.timestamp).unwrap_or_default(),
+            newest_timestamp: entries.last().map(|val| val.timestamp).unwrap_or_default(),
+        },
+        _ => DbInfo {
+            entry_count: 0,
+            oldest_timestamp: 0,
+            newest_timestamp: 0,
+        },
+    }
 }
 
 #[cfg(test)]
@@ -105,40 +116,6 @@ mod tests {
     }
 
     #[test]
-    fn test_db() {
-        let db_path = tempdir().unwrap();
-        let db_path = db_path.path().join("test2.ron");
-        let db = init_db(db_path).unwrap();
-        let _ = db.write(|db| {
-            db.any.insert("foo".to_string(), "bar".to_string());
-            db.entries.push(DbUserVaultHoldings {
-                timestamp: unix_time(),
-                price_per_share: "0".to_string(),
-                dai: "0".to_string(),
-                usdc: "0".to_string(),
-                both: "0".to_string(),
-                cdai: "0".to_string(),
-                cusdc: "0".to_string(),
-                cboth: "0".to_string(),
-            });
-            db.entries.push(DbUserVaultHoldings {
-                timestamp: unix_time(),
-                price_per_share: "1".to_string(),
-                dai: "1".to_string(),
-                usdc: "1".to_string(),
-                both: "1".to_string(),
-                cdai: "1".to_string(),
-                cusdc: "1".to_string(),
-                cboth: "1".to_string(),
-            });
-        });
-        let foo = db.read(|db| db.any.get("foo").cloned()).unwrap();
-        let entries = db.read(|db| db.entries.clone()).unwrap();
-        assert_eq!(foo, Some("bar".to_string()));
-        assert_eq!(entries.len(), 2);
-    }
-
-    #[test]
     fn test_write_skips_duplicate_subsequent_entry() {
         let db_path = tempdir().unwrap();
         let db_path = db_path.path().join("test2.ron");
@@ -149,10 +126,12 @@ mod tests {
         // Different timestamps should be ignored
         entry_2.timestamp = entry_2.timestamp + 1;
 
-        save_entry(&db, &entry_1).unwrap();
-        save_entry(&db, &entry_2).unwrap();
+        let group_id = "0xdeadbeef_some_vault";
 
-        let entries = read_entries(&db);
+        save_entry(&db, &group_id, &entry_1).unwrap();
+        save_entry(&db, &group_id, &entry_2).unwrap();
+
+        let entries = read_entries(&db, &group_id);
         assert_eq!(entries.len(), 1);
     }
 }

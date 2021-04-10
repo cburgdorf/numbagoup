@@ -4,6 +4,24 @@ use crate::utils::unix_time;
 use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 
+pub struct VaultIdentifier {
+    pub address: String,
+    vault_name: String,
+}
+
+impl VaultIdentifier {
+    pub fn new(address: &str, vault_name: &str) -> VaultIdentifier {
+        VaultIdentifier {
+            address: address.to_owned(),
+            vault_name: vault_name.to_owned(),
+        }
+    }
+
+    pub fn id(&self) -> String {
+        format!("{}-{}", self.address, self.vault_name)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct DbInfo {
     pub oldest_timestamp: u64,
