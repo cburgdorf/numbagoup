@@ -3,7 +3,7 @@ use ethers::{abi::Abi, abi::Uint, prelude::*};
 
 use std::str::FromStr;
 
-use crate::constants::CURVE_COMP_POOL_ADDRESS;
+use crate::constants::*;
 
 fn new_contract(provider: &Provider<Http>, abi: &str, address: &str) -> Contract<Provider<Http>> {
     let abi: Abi = serde_json::from_str(abi).expect("Can't load ABI");
@@ -51,9 +51,9 @@ impl CurveRegistry {
             .await
     }
 
-    pub async fn get_comp_cdai_cusdc(&self) -> Result<Vec<Uint>, ContractError<Provider<Http>>> {
+    pub async fn get_saave_dai_susd(&self) -> Result<Vec<Uint>, ContractError<Provider<Http>>> {
         // FIXME: Don't hardcode pool
-        let address = Address::from_str(CURVE_COMP_POOL_ADDRESS).unwrap();
+        let address = Address::from_str(CURVE_SAAVE_POOL_ADDRESS).unwrap();
         self.contract
             .method::<_, Vec<Uint>>("get_balances", address)?
             .call()
@@ -61,13 +61,13 @@ impl CurveRegistry {
     }
 }
 
-pub struct CurveCompLPToken {
+pub struct CurvePoolLPToken {
     contract: Contract<Provider<Http>>,
 }
 
-impl CurveCompLPToken {
+impl CurvePoolLPToken {
     pub fn new(provider: &Provider<Http>, abi: &str, address: &str) -> Self {
-        CurveCompLPToken {
+        CurvePoolLPToken {
             contract: new_contract(provider, abi, address),
         }
     }

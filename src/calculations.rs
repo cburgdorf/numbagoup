@@ -51,14 +51,14 @@ pub fn get_gain_in_past_duration(
     let start_time = now - duration_sec;
     let start_point = find_closest_to(entries, start_time);
     if let (Some(start_holdings), Some(now_holdings)) = (start_point, entries.last()) {
-        let gain = &now_holdings.both - &start_holdings.both;
+        let gain = &now_holdings.usd_all - &start_holdings.usd_all;
         let actual_duration = now_holdings.timestamp - start_holdings.timestamp;
         if actual_duration == 0 {
             return GainInfo::zero();
         }
         let scaled_gain = gain / BigDecimal::from(actual_duration) * BigDecimal::from(duration_sec);
 
-        let gain_in_percent = ((&start_holdings.both + &scaled_gain) / &start_holdings.both
+        let gain_in_percent = ((&start_holdings.usd_all + &scaled_gain) / &start_holdings.usd_all
             - BigDecimal::from(1))
             * BigDecimal::from(100);
         let apy = &gain_in_percent / BigDecimal::from(duration_sec)
@@ -97,6 +97,25 @@ pub fn get_performance(
     }
 }
 
+pub fn get_cumulated_performance(
+    holdings: &[UserVaultHoldings],
+    entries: &[VaultPerformance],
+) -> (BigDecimal, VaultPerformance) {
+    let total: BigDecimal = holdings.iter().map(|value| &value.usd_all).sum();
+    let total_performance = VaultPerformance {
+        gain_last_check: entries.iter().map(|value| &value.gain_last_check).sum(),
+        gain_past_hour: entries.iter().map(|value| &value.gain_past_hour).sum(),
+        gain_past_day: entries.iter().map(|value| &value.gain_past_day).sum(),
+        gain_past_week: entries.iter().map(|value| &value.gain_past_week).sum(),
+        gain_past_month: entries.iter().map(|value| &value.gain_past_month).sum(),
+        apy_past_hour: BigDecimal::from(0),
+        apy_past_day: BigDecimal::from(0),
+        apy_past_week: BigDecimal::from(0),
+        apy_past_month: BigDecimal::from(0),
+    };
+    (total, total_performance)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::calculations::{find_closest_to, get_gain_in_past_duration};
@@ -113,7 +132,7 @@ mod tests {
         pub fn with_timestamp_and_value(timestamp: u64, value: u64) -> UserVaultHoldings {
             let mut custom = UserVaultHoldings::zero();
             custom.timestamp = timestamp;
-            custom.both = BigDecimal::from(value);
+            custom.usd_all = BigDecimal::from(value);
             custom
         }
     }
