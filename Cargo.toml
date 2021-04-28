@@ -1,6 +1,6 @@
 [package]
 name = "numbagoup"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["Christoph Burgdorf <christoph.burgdorf@gmail.com>"]
 edition = "2018"
 description = "A tool to track the earnings of your yearn vaults (limited to crvCOMP vault for now)"
