@@ -13,7 +13,8 @@ pub const CURVE_SAAVE_LP_TOKEN_ABI: &str =
 
 pub const YEARN_CRV_COMP_VAULT_ADDRESS: &str = "0x629c759D1E83eFbF63d84eb3868B564d9521C129";
 pub const YEARN_VAULT_V1_ABI: &str = include_str!("resources/abi/yearn_vault.abi.json");
-pub const YEARN_CRV_SAAVE_VAULT_ADDRESS: &str = "0xBacB69571323575C6a5A3b4F9EEde1DC7D31FBc1";
+pub const YEARN_VAULT_V2_ABI: &str = include_str!("resources/abi/yearn_vault_v2.abi.json");
+pub const YEARN_CRV_SAAVE_VAULT_ADDRESS: &str = "0xb4D1Be44BfF40ad6e506edf43156577a3f8672eC";
 
 pub const HOUR_IN_SEC: u64 = 60 * 60;
 pub const DAY_IN_SEC: u64 = HOUR_IN_SEC * 24;
