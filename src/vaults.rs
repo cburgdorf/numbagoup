@@ -3,7 +3,7 @@ use ethers::prelude::*;
 use std::str::FromStr;
 
 use crate::constants::*;
-use crate::contracts::{CurvePoolLPToken, CurveRegistry, YearnVaultV1, YearnVaultV2};
+use crate::contracts::{CurvePoolLpToken, CurveRegistry, YearnVaultV1, YearnVaultV2};
 use crate::types::UserVaultHoldings;
 use crate::utils::{scale_to_share, unix_time, Scale, ToBigDecimal};
 
@@ -17,7 +17,7 @@ pub async fn get_crvcomp_holdings(
         YearnVaultV1::new(&provider, YEARN_VAULT_V1_ABI, YEARN_CRV_COMP_VAULT_ADDRESS);
 
     let curve_registry = CurveRegistry::new(&provider, CURVE_REGISTRY_ABI, CURVE_REGISTRY_ADDRESS);
-    let curve_comp_lp_token = CurvePoolLPToken::new(
+    let curve_comp_lp_token = CurvePoolLpToken::new(
         &provider,
         CURVE_COMP_LP_TOKEN_ABI,
         CURVE_COMP_LP_TOKEN_ADDRESS,
@@ -70,7 +70,7 @@ pub async fn get_crvsaave_holdings(
         YearnVaultV2::new(&provider, YEARN_VAULT_V2_ABI, YEARN_CRV_SAAVE_VAULT_ADDRESS);
 
     let curve_registry = CurveRegistry::new(&provider, CURVE_REGISTRY_ABI, CURVE_REGISTRY_ADDRESS);
-    let curve_pool_lp_token = CurvePoolLPToken::new(
+    let curve_pool_lp_token = CurvePoolLpToken::new(
         &provider,
         CURVE_SAAVE_LP_TOKEN_ABI,
         CURVE_SAAVE_LP_TOKEN_ADDRESS,

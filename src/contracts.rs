@@ -61,13 +61,13 @@ impl CurveRegistry {
     }
 }
 
-pub struct CurvePoolLPToken {
+pub struct CurvePoolLpToken {
     contract: Contract<Provider<Http>>,
 }
 
-impl CurvePoolLPToken {
+impl CurvePoolLpToken {
     pub fn new(provider: &Provider<Http>, abi: &str, address: &str) -> Self {
-        CurvePoolLPToken {
+        CurvePoolLpToken {
             contract: new_contract(provider, abi, address),
         }
     }

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use crate::types::{DbUserVaultHoldings, UserVaultHoldings};
 
-pub type DB = FileDatabase<Data, Ron>;
+pub type Db = FileDatabase<Data, Ron>;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Data {
@@ -34,13 +34,13 @@ pub fn enforce_app_dir() -> Result<PathBuf, &'static str> {
     }
 }
 
-pub fn init_default_db() -> Result<DB, &'static str> {
+pub fn init_default_db() -> Result<Db, &'static str> {
     let app_dir = enforce_app_dir()?;
     let app_dir = app_dir.join("db.ron");
     init_db(app_dir)
 }
 
-pub fn init_db(path: PathBuf) -> Result<DB, &'static str> {
+pub fn init_db(path: PathBuf) -> Result<Db, &'static str> {
     FileDatabase::load_from_path_or(
         path,
         Data {
@@ -52,7 +52,7 @@ pub fn init_db(path: PathBuf) -> Result<DB, &'static str> {
 }
 
 pub fn save_entry(
-    db: &DB,
+    db: &Db,
     group_id: &str,
     entry: &UserVaultHoldings,
 ) -> Result<(), rustbreak::RustbreakError> {
@@ -76,14 +76,14 @@ pub fn save_entry(
     Ok(())
 }
 
-pub fn read_entries(db: &DB, group_id: &str) -> Vec<UserVaultHoldings> {
+pub fn read_entries(db: &Db, group_id: &str) -> Vec<UserVaultHoldings> {
     match db.read(|db| db.group_entries.get(group_id).cloned()) {
         Ok(Some(val)) => val.iter().map(UserVaultHoldings::from).collect(),
         _ => vec![],
     }
 }
 
-pub fn db_info(db: &DB, group_id: &str) -> DbInfo {
+pub fn db_info(db: &Db, group_id: &str) -> DbInfo {
     match db.read(|db| db.group_entries.get(group_id).cloned()) {
         Ok(Some(entries)) => DbInfo {
             entry_count: entries.len(),
