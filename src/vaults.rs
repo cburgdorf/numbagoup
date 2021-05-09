@@ -3,7 +3,7 @@ use ethers::prelude::*;
 use std::str::FromStr;
 
 use crate::constants::*;
-use crate::contracts::{CurvePoolLpToken, CurveRegistry, YearnVaultV1, YearnVaultV2};
+use crate::contracts::{CurvePoolLpToken, CurveRegistry, YearnVaultV2};
 use crate::types::UserVaultHoldings;
 use crate::utils::{scale_to_share, unix_time, Scale, ToBigDecimal};
 
@@ -14,7 +14,7 @@ pub async fn get_crvcomp_holdings(
     let me = Address::from_str(holder_address).expect("Holder address is invalid");
 
     let yearn_cmp_vault =
-        YearnVaultV1::new(&provider, YEARN_VAULT_V1_ABI, YEARN_CRV_COMP_VAULT_ADDRESS);
+        YearnVaultV2::new(&provider, YEARN_VAULT_V2_ABI, YEARN_CRV_COMP_VAULT_ADDRESS);
 
     let curve_registry = CurveRegistry::new(&provider, CURVE_REGISTRY_ABI, CURVE_REGISTRY_ADDRESS);
     let curve_comp_lp_token = CurvePoolLpToken::new(

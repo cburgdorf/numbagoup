@@ -11,8 +11,7 @@ pub const CURVE_SAAVE_LP_TOKEN_ADDRESS: &str = "0x02d341CcB60fAaf662bC0554d13778
 pub const CURVE_SAAVE_LP_TOKEN_ABI: &str =
     include_str!("resources/abi/curve_saave_lp_token.abi.json");
 
-pub const YEARN_CRV_COMP_VAULT_ADDRESS: &str = "0x629c759D1E83eFbF63d84eb3868B564d9521C129";
-pub const YEARN_VAULT_V1_ABI: &str = include_str!("resources/abi/yearn_vault.abi.json");
+pub const YEARN_CRV_COMP_VAULT_ADDRESS: &str = "0xD6Ea40597Be05c201845c0bFd2e96A60bACde267";
 pub const YEARN_VAULT_V2_ABI: &str = include_str!("resources/abi/yearn_vault_v2.abi.json");
 pub const YEARN_CRV_SAAVE_VAULT_ADDRESS: &str = "0xb4D1Be44BfF40ad6e506edf43156577a3f8672eC";
 

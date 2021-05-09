@@ -80,35 +80,6 @@ impl CurvePoolLpToken {
     }
 }
 
-pub struct YearnVaultV1 {
-    contract: Contract<Provider<Http>>,
-}
-
-impl YearnVaultV1 {
-    pub fn new(provider: &Provider<Http>, abi: &str, address: &str) -> Self {
-        YearnVaultV1 {
-            contract: new_contract(provider, abi, address),
-        }
-    }
-
-    pub async fn get_price_per_share(&self) -> Result<Uint, ContractError<Provider<Http>>> {
-        self.contract
-            .method::<_, Uint>("getPricePerFullShare", ())?
-            .call()
-            .await
-    }
-
-    pub async fn balance_of(
-        &self,
-        address: Address,
-    ) -> Result<Uint, ContractError<Provider<Http>>> {
-        self.contract
-            .method::<_, Uint>("balanceOf", address)?
-            .call()
-            .await
-    }
-}
-
 pub struct YearnVaultV2 {
     contract: Contract<Provider<Http>>,
 }
