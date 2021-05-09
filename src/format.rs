@@ -2,16 +2,17 @@ use bigdecimal::BigDecimal;
 
 use crate::types::{UserVaultHoldings, VaultPerformance};
 
+use chrono::Local;
+
 pub fn print_header() {
     print!(
 "
 --------------------------------------------------------------------------------------------------------------------------------
-            |             |           |                                    🚜 Gain (USD) / APY 📈                              |
+            |             |           |                                    🚜 Gain (USD) / APY 📈 @ {:27}|
 ------------|-------------|-----------|------------|------------------|------------------|------------------|------------------|
 VAULT       |Price / share| USD value | last check |     past hour    |     past day     |     past week    |    past month    |
 ------------|-------------|-----------|------------|------------------|------------------|------------------|------------------|
-"
-  );
+", Local::now().format("%Y-%m-%d %H:%M:%S"));
 }
 
 pub fn print_result(
