@@ -13,7 +13,7 @@ pub async fn get_crvcomp_holdings(
 ) -> Result<UserVaultHoldings> {
     let me = Address::from_str(holder_address).expect("Holder address is invalid");
 
-    let yearn_cmp_vault =
+    let yearn_vault =
         YearnVaultV2::new(&provider, YEARN_VAULT_V2_ABI, YEARN_CRV_COMP_VAULT_ADDRESS);
 
     let curve_registry = CurveRegistry::new(&provider, CURVE_REGISTRY_ABI, CURVE_REGISTRY_ADDRESS);
@@ -32,10 +32,10 @@ pub async fn get_crvcomp_holdings(
     let total_lp_tokens = &curve_comp_lp_token.total_supply().await?.to_big_dec();
 
     // Get the number of yearn vault shares that I own
-    let my_vault_shares = &yearn_cmp_vault.balance_of(me).await?.to_big_dec();
+    let my_vault_shares = &yearn_vault.balance_of(me).await?.to_big_dec();
 
     // Get the price per vault share and scale it down by 1e18
-    let price_per_share = &yearn_cmp_vault
+    let price_per_share = &yearn_vault
         .get_price_per_share()
         .await?
         .to_big_dec()
@@ -66,7 +66,7 @@ pub async fn get_crvsaave_holdings(
 ) -> Result<UserVaultHoldings> {
     let me = Address::from_str(holder_address).expect("Holder address is invalid");
 
-    let yearn_cmp_vault =
+    let yearn_vault =
         YearnVaultV2::new(&provider, YEARN_VAULT_V2_ABI, YEARN_CRV_SAAVE_VAULT_ADDRESS);
 
     let curve_registry = CurveRegistry::new(&provider, CURVE_REGISTRY_ABI, CURVE_REGISTRY_ADDRESS);
@@ -76,7 +76,7 @@ pub async fn get_crvsaave_holdings(
         CURVE_SAAVE_LP_TOKEN_ADDRESS,
     );
 
-    // Get the DAI+sUSD holdings of the Curve Comp Pool
+    // Get the DAI+sUSD holdings of the Curve SAAVE Pool
     let balances = curve_registry.get_saave_dai_susd().await?;
     let dai_in_curve = balances.get(0).unwrap().to_big_dec();
     let susd_in_curve = balances.get(1).unwrap().to_big_dec();
@@ -85,10 +85,10 @@ pub async fn get_crvsaave_holdings(
     let total_lp_tokens = &curve_pool_lp_token.total_supply().await?.to_big_dec();
 
     // Get the number of yearn vault shares that I own
-    let my_vault_shares = &yearn_cmp_vault.balance_of(me).await?.to_big_dec();
+    let my_vault_shares = &yearn_vault.balance_of(me).await?.to_big_dec();
 
     // Get the price per vault share and scale it down by 1e18
-    let price_per_share = &yearn_cmp_vault
+    let price_per_share = &yearn_vault
         .get_price_per_share()
         .await?
         .to_big_dec()
